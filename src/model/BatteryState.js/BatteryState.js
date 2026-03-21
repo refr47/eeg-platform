@@ -1,0 +1,26 @@
+import mongoose from "mongoose";
+const batteryStateSchema = new mongoose.Schema(
+  {
+    batteryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Battery",
+      required: true,
+      index: true,
+    },
+    recordedAt: { type: Date, required: true, default: Date.now, index: true },
+    stateOfChargePercent: { type: Number, required: true, min: 0, max: 100 },
+    availableCapacityKwh: { type: Number, required: true, min: 0 },
+    chargingPowerKw: { type: Number, required: true, min: 0, default: 0 },
+    dischargingPowerKw: { type: Number, required: true, min: 0, default: 0 },
+    healthPercent: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+      default: 100,
+    },
+    source: { type: String, required: true, default: "mqtt" },
+  },
+  { timestamps: false },
+);
+export default mongoose.model("BatteryState", batteryStateSchema);

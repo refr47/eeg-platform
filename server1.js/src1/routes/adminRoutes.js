@@ -1,0 +1,10 @@
+import * as express from "express";
+import asyncHandler from "../src/utils/asyncHandler";
+import auth from "../middlewares/auth";
+import adminController from "../controllers/adminController";
+const { requireAuth, requireRole } = auth;
+const { recalculateAllYearlyEnergyBalances, recalculateCustomerAccountYear, } = adminController;
+const router = express.Router();
+router.post("/yearly-energy-balances/recalculate", requireAuth, requireRole("admin"), asyncHandler(recalculateAllYearlyEnergyBalances));
+router.post("/customer-accounts/:customerAccountId/yearly-energy-balances/:year/recalculate", requireAuth, requireRole("admin"), asyncHandler(recalculateCustomerAccountYear));
+export default router;

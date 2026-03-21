@@ -1,0 +1,93 @@
+const Battery = require("../models/Battery");
+const BatteryState = require("../models/BatteryState");
+const EnergyPolicy = require("../models/EnergyPolicy");
+
+async function createBattery(req, res) {
+  const battery = await Battery.create(req.body);
+  return res.status(201).json(battery);
+}
+
+async function getBatteryById(req, res) {
+  const battery = await Battery.findById(req.params.batteryId);
+
+  if (!battery) {
+    return res.status(404).json({ message: "Battery not found" });
+  }
+
+  return res.json(battery);
+}
+
+async function listBatteries(req, res) {
+  const filter = {};
+  if (req.query.customerAccountId) {
+    filter.customerAccountId = req.query.customerAccountId;
+  }
+
+  const items = await Battery.find(filter).sort({ createdAt: -1 });
+  return res.json(items);
+}
+
+async function createBatteryState(req, res) {
+  const state = await BatteryState.create({
+    batteryId: req.params.batteryId,
+    recordedAt: req.body.recordedAt,
+    stateOfChargePercent: req.body.stateOfChargePercent,
+    availableCapacityKwh: req.body.availableCapacityKwh,
+    chargingPowerKw: req.body.chargingPowerKw,
+    dischargingPowerKw: req.body.dischargingPowerKw,
+    healthPercent: req.body.healthPercent,
+    source: req.body.source || "mqtt",
+  });
+
+  return res.status(201).json(state);
+}
+
+async function listBatteryStates(req, res) {
+  const items = await BatteryState.find({ batteryId: req.params.batteryId })
+    .sort({ recordedAt: -1 })
+    .limit(200);
+
+  return res.json(items);
+}
+
+async function createEnergyPolicy(req, res) {
+  const policy = await EnergyPolicy.create({
+    customerAccountId: req.body.customerAccountId,
+    batteryId: req.params.batteryId,
+    preferEegCharging: req.body.preferEegCharging,
+    allowBatteryDischargeWhenEegDeficit:
+      req.body.allowBatteryDischargeWhenEegDeficit,
+    allowBatteryFeedInToEeg: req.body.allowBatteryFeedInToEeg,
+    allowBatteryFeedInToGrid: req.body.allowBatteryFeedInToGrid,
+    reserveSocPercent: req.body.reserveSocPercent,
+    targetSocPercent: req.body.targetSocPercent,
+    maxChargePowerKw: req.body.maxChargePowerKw,
+    maxDischargePowerKw: req.body.maxDischargePowerKw,
+    priority: req.body.priority,
+    isActive: req.body.isActive,
+    validFrom: req.body.validFrom,
+    validTo: req.body.validTo,
+  });
+
+  return res.status(201).json(policy);
+}
+
+async function listEnergyPolicies(req, res) {
+  const items = await EnergyPolicy.find({
+    batteryId: req.params.batteryId,
+  }).sort({
+    createdAt: -1,
+  });
+
+  return res.json(items);
+}
+
+module.exports = {
+  createBattery,
+  getBatteryById,
+  listBatteries,
+  createBatteryState,
+  listBatteryStates,
+  createEnergyPolicy,
+  listEnergyPolicies,
+};

@@ -1,0 +1,4 @@
+const catchAsyncErrors = (asyncErrorHandler) => (req, res, next) => {
+  Promise.resolve(asyncErrorHandler(req, res, next)).catch(next);
+};
+export default catchAsyncErrors;

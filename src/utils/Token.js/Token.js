@@ -1,0 +1,14 @@
+// ! Genrate Token -  middileware -
+import dotenv from "dotenv";
+dotenv.config({ path: "./config/config.env" });
+import jwt from "jsonwebtoken";
+export const authToken = (user) => {
+  const token = jwt.sign(user, process.env.JWT_SECRET, {
+    expiresIn: `${process.env.JWT_EXPIRY}`,
+  });
+  return token;
+};
+export const options = {
+  httpOnly: true,
+  maxAge: process.env.COOKIE_EXPIRY * 24 * 60 * 60 * 1000,
+};

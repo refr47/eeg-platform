@@ -1,0 +1,45 @@
+const express = require("express");
+const asyncHandler = require("../src/utils/asyncHandler");
+const { requireAuth, requireRole } = require("../middlewares/auth");
+const {
+  createEeg,
+  getEegById,
+  createEegMembership,
+  listEegMemberships,
+  createEegState,
+  listEegStates,
+} = require("../controllers/eegsController");
+
+const router = express.Router();
+
+router.post(
+  "/",
+  requireAuth,
+  requireRole("admin", "eegAdmin"),
+  asyncHandler(createEeg),
+);
+router.get("/:eegId", requireAuth, asyncHandler(getEegById));
+
+router.post(
+  "/:eegId/memberships",
+  requireAuth,
+  requireRole("admin", "eegAdmin"),
+  asyncHandler(createEegMembership),
+);
+
+router.get(
+  "/:eegId/memberships",
+  requireAuth,
+  asyncHandler(listEegMemberships),
+);
+
+router.post(
+  "/:eegId/states",
+  requireAuth,
+  requireRole("admin", "eegAdmin"),
+  asyncHandler(createEegState),
+);
+
+router.get("/:eegId/states", requireAuth, asyncHandler(listEegStates));
+
+module.exports = router;

@@ -1,0 +1,11 @@
+import * as express from "express";
+import asyncHandler from "../src/utils/asyncHandler";
+import auth from "../middlewares/auth";
+import authController from "../controllers/authController";
+const { requireAuth } = auth;
+const { register, createSession, getCurrentSession, } = authController;
+const router = express.Router();
+router.post("/users", asyncHandler(register));
+router.post("/sessions", asyncHandler(createSession));
+router.get("/sessions/current", requireAuth, asyncHandler(getCurrentSession));
+export default router;

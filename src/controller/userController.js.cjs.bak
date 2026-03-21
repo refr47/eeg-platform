@@ -1,0 +1,81 @@
+import catchAsyncErrors from "../helpers/catchAsyncErrors.js"
+import ErrorHandler from "../utils/ErrorHandler.js";
+import SuccessHandler from "../utils/SucessHandler.js"
+import User from "../model/userModel.js";
+import bcrypt from "bcryptjs";
+import { authToken, options } from "../utils/Token.js"
+const salt = process.env.SALT || 10;
+
+// Register User - 
+
+export const registerUser = catchAsyncErrors(async (req, res, next) => {
+    const { password } = req.body;
+
+    req.body.password = await bcrypt.hash(password, salt);
+    const users = await User.create(req.body);
+    if (!users) {
+        return next(new ErrorHandler("user not created", 403));
+    }
+    return new SuccessHandler(201, "user created sucessFully", users).send(res);
+});
+
+//  Find Users - 
+
+export const getUsers = catchAsyncErrors(async (req, res, next) => {
+    const users = await User.find();
+    if (!users) {
+        return next(new ErrorHandler("User Not Found", 403))
+    }
+    return new SuccessHandler(200, "users Found", users).send(res);
+});
+
+//  get Users Profile  - 
+
+export const getProfile = catchAsyncErrors(async (req, res, next) => {
+
+    const userDetail = await User.findById(req.user.id);
+    if (!userDetail) {
+        return next(new ErrorHandler("user  not Found ", 404));
+    };
+
+    return new SuccessHandler(200, "user Found", userDetail).send(res);
+
+})
+
+// Update User Profile - 
+export const updateProfile = catchAsyncErrors(async (req, res, next) => {
+    // Try Yourself
+});
+
+// Delete USer Account -
+export const deleteUser = catchAsyncErrors(async (req, res, next) => {
+    // Try Yourself
+});
+
+// login User -  
+export const loginUser = catchAsyncErrors(async (req, res, next) => {
+
+    const { id, password } = req.body;
+
+    if (!id || !password) { return next(new ErrorHandler("id and password is mandatory", 400)) }
+    const user = await User.findOne({ $or: [{ userName: id }, { email: id }, { phone: id }] })
+    if (!user) {
+        return next(new ErrorHandler("User Not Found", 400));
+    }
+    const matchPassword = await bcrypt.compare(password, user.password); // comparing plan and Hashed password -
+
+    if (!matchPassword) {
+        return next(new ErrorHandler("user id and password not matched ", 404))
+    }
+    const token = authToken({ user: user });
+    res.cookie("authToken", token, options), new SuccessHandler(200, "user logged-in sucessfully", user).send(res);
+
+});
+
+//  logout User -
+export const logoutUser = catchAsyncErrors(async (req, res, next) => {
+
+    res.clearCookie("authToken", options), new SuccessHandler(200, "user logged-out sucessfully", null).send(res);
+
+});
+

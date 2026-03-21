@@ -1,0 +1,91 @@
+const Device = require("../models/Device");
+const MeterReading = require("../models/MeterReading");
+const DeviceCommand = require("../models/DeviceCommand");
+
+async function createDevice(req, res) {
+  const device = await Device.create(req.body);
+  return res.status(201).json(device);
+}
+
+async function getDeviceById(req, res) {
+  const device = await Device.findById(req.params.deviceId);
+
+  if (!device) {
+    return res.status(404).json({ message: "Device not found" });
+  }
+
+  return res.json(device);
+}
+
+async function listDevices(req, res) {
+  const filter = {};
+
+  if (req.query.customerAccountId) {
+    filter.customerAccountId = req.query.customerAccountId;
+  }
+
+  if (req.query.eegId) {
+    filter.eegId = req.query.eegId;
+  }
+
+  const items = await Device.find(filter).sort({ createdAt: -1 });
+  return res.json(items);
+}
+
+async function createMeterReading(req, res) {
+  const reading = await MeterReading.create({
+    customerAccountId: req.body.customerAccountId,
+    deviceId: req.params.deviceId,
+    recordedAt: req.body.recordedAt,
+    gridImportKw: req.body.gridImportKw,
+    gridExportKw: req.body.gridExportKw,
+    cumulativeImportKwh: req.body.cumulativeImportKwh,
+    cumulativeExportKwh: req.body.cumulativeExportKwh,
+    source: req.body.source || "mqtt",
+  });
+
+  await Device.findByIdAndUpdate(req.params.deviceId, {
+    $set: { lastSeenAt: new Date() },
+  });
+
+  return res.status(201).json(reading);
+}
+
+async function listMeterReadings(req, res) {
+  const items = await MeterReading.find({ deviceId: req.params.deviceId })
+    .sort({ recordedAt: -1 })
+    .limit(200);
+
+  return res.json(items);
+}
+
+async function createDeviceCommand(req, res) {
+  const command = await DeviceCommand.create({
+    deviceId: req.params.deviceId,
+    commandType: req.body.commandType,
+    payload: req.body.payload,
+    transport: req.body.transport || "mqtt",
+    topic: req.body.topic,
+    correlationId: req.body.correlationId,
+  });
+
+  return res.status(201).json(command);
+}
+
+async function listDeviceCommands(req, res) {
+  const items = await DeviceCommand.find({ deviceId: req.params.deviceId })
+    .sort({ createdAt: -1 })
+    .limit(200);
+
+  return res.json(items);
+}
+
+module.exports = {
+  createDevice,
+  getDeviceById,
+  listDevices,
+  createMeterReading,
+  listMeterReadings,
+  createDeviceCommand,
+  listDeviceCommands,
+};

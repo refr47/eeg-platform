@@ -1,0 +1,37 @@
+services:
+  mongodb:
+    image: docker.io/library/mongo:7
+    container_name: energy-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: energy_platform
+    volumes:
+      - energy-mongo-data:/data/db
+    networks:
+      - energy-net
+
+  energy-platform:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: energy-platform
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongodb:27017/energy_platform
+      JWT_SECRET: change-me-in-production
+      JWT_EXPIRES_IN: 12h
+    ports:
+      - "3000:3000"
+    networks:
+      - energy-net
+
+volumes:
+  energy-mongo-data:
+
+networks:
+  energy-net:
+    driver: bridge

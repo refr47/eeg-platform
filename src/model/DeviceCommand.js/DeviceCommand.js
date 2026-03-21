@@ -1,0 +1,39 @@
+import mongoose from "mongoose";
+const deviceCommandSchema = new mongoose.Schema(
+  {
+    deviceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Device",
+      required: true,
+      index: true,
+    },
+    commandType: {
+      type: String,
+      required: true,
+      enum: ["setChargePower", "setDischargePower", "setMode", "stop"],
+    },
+    payload: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+    transport: {
+      type: String,
+      required: true,
+      enum: ["mqtt", "rest"],
+      default: "mqtt",
+    },
+    topic: { type: String, default: null },
+    requestedAt: { type: Date, required: true, default: Date.now },
+    sentAt: { type: Date, default: null },
+    acknowledgedAt: { type: Date, default: null },
+    status: {
+      type: String,
+      required: true,
+      enum: ["requested", "sent", "acknowledged", "failed"],
+      default: "requested",
+    },
+    correlationId: { type: String, default: null },
+  },
+  { timestamps: true },
+);
+export default mongoose.model("DeviceCommand", deviceCommandSchema);

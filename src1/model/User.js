@@ -1,0 +1,68 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
+const profileSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    phonePrimary: { type: String, required: true, trim: true },
+    phoneSecondary: { type: String, trim: true, default: null },
+  },
+  { _id: false },
+);
+
+const userSchema = new mongoose.Schema(
+  {
+    schemaVersion: { type: Number, required: true, default: 1 },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+    passwordHash: { type: String, required: true, select: false },
+    status: {
+      type: String,
+      required: true,
+      enum: ["active", "disabled", "pending"],
+      default: "active",
+    },
+    roles: {
+      type: [String],
+      required: true,
+      default: ["customer"],
+      validate: {
+        validator(value) {
+          return Array.isArray(value) && value.length > 0;
+        },
+        message: "roles must contain at least one role",
+      },
+    },
+    profile: { type: profileSchema, required: true },
+    registeredAt: { type: Date, required: true, default: Date.now },
+    lastLoginAt: { type: Date, default: null },
+  },
+  { timestamps: true },
+);
+
+userSchema.methods.setPassword = async function setPassword(plainPassword) {
+  const saltRounds = 12;
+  this.passwordHash = await bcrypt.hash(plainPassword, saltRounds);
+};
+
+userSchema.methods.comparePassword = async function comparePassword(
+  plainPassword,
+) {
+  return bcrypt.compare(plainPassword, this.passwordHash);
+};
+
+userSchema.set("toJSON", {
+  transform(_doc, ret) {
+    delete ret.passwordHash;
+    return ret;
+  },
+});
+
+module.exports = mongoose.model("User", userSchema);

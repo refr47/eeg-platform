@@ -1,0 +1,15 @@
+import * as express from "express";
+import asyncHandler from "../src/utils/asyncHandler";
+import auth from "../middlewares/auth";
+import usersController from "../controllers/usersController";
+const { requireAuth, requireRole } = auth;
+const { getCurrentUser, getUserById } = usersController;
+const router = express.Router();
+router.get("/me", requireAuth, asyncHandler(getCurrentUser));
+router.get(
+  "/:userId",
+  requireAuth,
+  requireRole("admin"),
+  asyncHandler(getUserById),
+);
+export default router;
