@@ -14,7 +14,7 @@ Jedes Mitglied der EEG verfügt über folgende technische Ausstattung:
 ## Systemarchitektur
 Im Mittelpunkt steht ein zentraler Software-Controller, in dem sämtliche Verbrauchsdaten (Strombezug) und Einspeisedaten der Mitglieder zusammengeführt werden. Auf dieser Basis erfolgt eine laufende Analyse sowie die automatisierte Steuerung von Erzeugung, Verbrauch und Speicherung.
 
-Betriebszustände und Logik
+*Betriebszustände und Logik*
 
 a) Einspeisung ≈ Bezug (nahezu ausgeglichen)
 → Optimalzustand: Der innerhalb der EEG erzeugte Strom wird nahezu vollständig direkt verbraucht.
@@ -46,15 +46,18 @@ IR-Lesekopf (ESP32)
 Wechselrichter-Anbindung
 Optional: Batteriespeicher (inkl. Steuerung)
 
-* * Funktion:
+*Funktion:*
 
-Echtzeit-Erfassung von:
+**Echtzeit-Erfassung von:**
+
 Strombezug
 Einspeisung
 Vorverarbeitung der Daten (z. B. Aggregation, Glättung)
 Übertragung an den zentralen Controller
 Empfang von Steuerbefehlen (z. B. Laden/Entladen von Akkus)
-1.2 Kommunikationsschicht
+
+**Kommunikationsschicht**
+
 Protokolle: MQTT oder HTTPS (REST API)
 Anforderungen:
 geringe Latenz
@@ -75,7 +78,7 @@ Optimierungs- und Regelalgorithmus
 Verteilungslogik (Fairness / Priorisierung)
 Schnittstelle zu Mitgliedern (API)
 
-2. Datenflüsse
+Datenflüsse
 2.1 Upstream (vom Mitglied zum Controller)
 
 Jedes Mitglied sendet zyklisch (z. B. alle 5–10 Sekunden):
