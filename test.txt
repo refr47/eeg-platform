@@ -1,0 +1,127 @@
+Benutzer registrieren:
+
+curl -X POST http://localhost:3000/auth/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "max@example.com",
+    "password": "SehrSicheresPasswort1",
+    "profile": {
+      "firstName": "Max",
+      "lastName": "Mustermann",
+      "phonePrimary": "+431234567",
+      "phoneSecondary": "+436641234567"
+    },
+    "roles": ["customer"]
+  }'
+
+  Login:
+
+curl -X POST http://localhost:3000/auth/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "max@example.com",
+    "password": "SehrSicheresPasswort1"
+  }'
+Customer account
+curl -X POST http://localhost:3000/customer-accounts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{
+    "meterNumber": "123456789012",
+    "isProducer": true,
+    "isConsumer": true,
+    "deliveryPointConsumption": "123456789012345678901234567890123",
+    "deliveryPointProduction": "987654321098765432109876543210987",
+    "address": {
+      "postalCode": "1010",
+      "street": "Hauptstrasse",
+      "houseNumber": "12",
+      "doorNumber": "4"
+    },
+    "bankAccount": {
+      "iban": "AT611904300234573201",
+      "bic": "BKAUATWW",
+      "accountNumber": "123456789"
+    }
+  }'
+Monthly balance
+curl -X POST http://localhost:3000/customer-accounts/CUSTOMER_ACCOUNT_ID/monthly-energy-balances \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{
+    "year": 2026,
+    "month": 3,
+    "gridConsumptionKwh": 350,
+    "gridFeedInKwh": 120,
+    "feedInTariff": 0.18,
+    "consumptionTariff": 0.29
+  }'
+Device
+curl -X POST http://localhost:3000/devices \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{
+    "customerAccountId": "CUSTOMER_ACCOUNT_ID",
+    "deviceType": "smartMeter",
+    "name": "Smart Meter EG",
+    "manufacturer": "Acme",
+    "model": "SM-2000",
+    "serialNumber": "SN-0001",
+    "mqttClientId": "meter-0001",
+    "mqttTopicBase": "boxh/devices/meter-0001"
+  }'
+Meter reading
+curl -X POST http://localhost:3000/devices/DEVICE_ID/meter-readings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{
+    "customerAccountId": "CUSTOMER_ACCOUNT_ID",
+    "gridImportKw": 0,
+    "gridExportKw": 2.4,
+    "cumulativeImportKwh": 12543.7,
+    "cumulativeExportKwh": 2841.2,
+    "source": "mqtt"
+  }'
+Battery
+curl -X POST http://localhost:3000/batteries \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{
+    "customerAccountId": "CUSTOMER_ACCOUNT_ID",
+    "deviceId": "DEVICE_ID",
+    "name": "Home Battery",
+    "capacityKwh": 10.5,
+    "maxChargePowerKw": 5,
+    "maxDischargePowerKw": 5,
+    "minSocPercent": 10,
+    "maxSocPercent": 95,
+    "allowGridCharging": false,
+    "allowEegCharging": true,
+    "allowDischargeToHome": true,
+    "allowDischargeToEeg": false,
+    "allowDischargeToGrid": false,
+    "isActive": true
+  }'
+Wichtige fachliche Ergänzungen
+
+Diese Basis ist gut und konsistent, aber für produktionsnahen Betrieb würde ich als nächste Ausbaustufe noch ergänzen:
+
+Refresh Tokens
+Token Revocation wirklich wirksam im JWT-Flow
+Request-Validierung mit zod, joi oder express-validator
+Pagination
+Ownership-Checks auch für Devices, Batteries, EEGs noch feiner
+MQTT Gateway Service
+Energy Orchestration Service
+Migrations-Runner
+OpenAPI / Swagger
+Tests
+Wichtig zu JWT
+
+Aktuell ist das eine solide stateless JWT-Basis.
+Die sessions-Collection ist schon vorbereitet, aber im gezeigten Code noch nicht vollständig zur Token-Sperrung ausgewertet. Für viele interne Systeme reicht das am Anfang, aber sauberer wäre:
+
+JWT mit jti
+Session mit jti
+Prüfung im Auth-Middleware gegen sessions
+Logout / Revoke-End

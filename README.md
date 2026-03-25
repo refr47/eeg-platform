@@ -1,1 +1,2 @@
-# eeg-platform"
+
+# EEG-Platform
