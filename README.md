@@ -80,6 +80,36 @@ Optimierungs- und Regelalgorithmus
 Verteilungslogik (Fairness / Priorisierung)
 Schnittstelle zu Mitgliedern (API)
 
+## Die Virtuelle Speicher-Abstraktionsschicht (Storage Virtualization Layer)
+
+Anstatt dass der Controller direkt "mit einer Batterie" spricht, interagiert er mit einem  **Standardized Storage Object** .
+
+**Das Konzept:**
+
+Jeder physische Speicher meldet sich am System an und "mapped" seine herstellerspezifischen Register (via Modbus/TCP oder SunSpec) auf ein einheitliches Profil.
+
+| **Parameter (abstrakt)** | **Bedeutung für den Controller**                                      |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| `State of Charge (SoC)`      | Aktueller Füllstand in %                                                    |
+| `Available Capacity`         | Netto-Kapazität in kWh (unter Berücksichtigung von Entladetiefe/Reserve)   |
+| `Max Charge/Discharge Power` | Aktuelles Limit (W) – wichtig, da Batterien bei 90% SoC oft langsamer laden |
+| `Health Status (SoH)`        | Zustand der Batterie (wichtig für die Fairness/Abnutzungs-Logik)            |
+| `Owner Policy`               | "Privat-Reserve": Wie viel % darf die EEG maximal nutzen?                    |
+
+## Fairness & Degradation"
+
+Wenn Mitglieder ihre privaten Akkus der EEG zur Verfügung stellen, verschleißen diese schneller (Ladezyklen). Dein System braucht hierfür einen Anreiz- oder Ausgleichsmechanismus:
+
+* **Wear-Leveling:** Der Controller priorisiert beim Entladen Speicher, die bisher am wenigsten Zyklen geleistet haben (ähnlich wie bei SSDs).
+* **Virtuelle Vergütung:** Wer Speicher bereitstellt, bekommt im internen Verrechnungsmodell der EEG einen besseren Tarif oder Vorrang beim Bezug von günstigem Überschussstrom.
+
+## Modbus
+
+Hier gibt es eine technische Falle: Modbus RTU (seriell) ist auf der Edge-Ebene super, aber über das Internet (WAN) ist es eventuell instabil und unsicher (==> Feasability soll dies klären!!)
+
+* **Lösung:** Der ESP32 agiert als  **Modbus-Gateway** . Er liest lokal die Register aus (Modbus TCP oder RTU) und übersetzt diese in  **JSON-Objekte** , die per **MQTT** an den Controller gesendet werden.
+* **Vorteil:** MQTT ist bidirektional, zustandsorientiert ("Last Will") und durch TLS einfach abzusichern. Der Controller sendet nur ein `{"cmd": "discharge", "power": 1500}`, und der ESP32 setzt dies lokal in den passenden Modbus-Schreibbefehl für den spezifischen Wechselrichter um.
+
 ## Datenflüsse
 
 ### Upstream (vom Mitglied zum Controller)
@@ -92,6 +122,33 @@ Batteriestatus:
 Ladezustand (%)
 verfügbare Kapazität (kWh)
 Lade-/Entladeleistung
+
+**Beispiel**:
+
+. Status-Telegramm (Edge → Controller)
+Dieses Paket sendet der ESP32 zyklisch (z.B. alle 5 Sek.). Es kapselt alle relevanten Informationen in ein einheitliches Format.
+
+{
+  "device_id": "EEG_MEMBER_0815",
+  "timestamp": "2026-03-25T16:05:00Z",
+  "grid": {
+    "p_import_w": 450.5,      // Aktueller Bezug vom Netz (Watt)
+    "p_export_w": 0.0         // Aktuelle Einspeisung ins Netz (Watt)
+  },
+  "storage": {
+    "type": "li-ion",
+    "state": "charging",      // charging, discharging, idle, full, empty
+    "soc_pct": 65.2,          // State of Charge in %
+    "capacity_total_kwh": 10.0,
+    "capacity_eeg_share_pct": 80, // Wie viel % der Kapazität darf die EEG nutzen?
+    "p_max_charge_w": 3000,   // Aktuelles Ladelimit (chemisch/technisch)
+    "p_max_discharge_w": 3000,
+    "p_current_w": 1200,      // + für Laden, - für Entladen
+    "soh_pct": 98.5           // State of Health (Verschleißprüfung)
+  },
+  "pv_production_w": 1800.0   // Aktuelle Erzeugung vor Ort
+}```
+
 
 ### Downstream (Controller → Mitglied)
 
@@ -110,7 +167,27 @@ Gesamt-Einspeisung EEG
 Gesamt-Verbrauch EEG
 Gesamte verfügbare Speicherkapazität
 
-Lokal:
+### Steuer-Telegramm (Controller → Edge)
+
+Der Controller berechnet die Lastverteilung in der EEG und sendet spezifische Anweisungen zurück.
+
+**JSON**
+
+```
+{
+  "target_device": "EEG_MEMBER_0815",
+  "command_id": "CMD_99281",
+  "action": "set_storage_mode",
+  "params": {
+    "mode": "remote_control", // Schaltet den WR in den externen Steuermodus
+    "setpoint_w": -1500,      // Zielwert: 1500W entladen zur Stützung der EEG
+    "priority": "high",       // Falls lokale Lasten Vorrang haben sollen
+    "timeout_sec": 30         // Sicherheits-Fallback: Wenn 30s kein neuer Befehl kommt, geh in Lokal-Modus
+  }
+}
+```
+
+**Lokal**:
 
 individuelle Batteriestände
 individuelle Vertragsparameter
@@ -170,12 +247,14 @@ zeitbasierte Rotation
 
 ## Sicherheits- und Betriebsaspekte
 
++ Verschlüsselte Kommunikation (TLS)
++ Authentifizierung der Geräte
++ Ausfallsicherheit:
++ Logging & Monitoring
++ **+ Latenz-Management:** In einer EEG kann es zu Schwingungen kommen, wenn alle Speicher gleichzeitig auf eine Wolke reagieren. Die Abstraktionsschicht sollte eine **"Slew Rate"** (Rampe) für Leistungsänderungen vorgeben.
 
-Verschlüsselte Kommunikation (TLS)
-Authentifizierung der Geräte
-Ausfallsicherheit:
-Logging & Monitoring
-Datenschutz (DSGVO-konform)
+* **Blackout-Resilienz:** Was passiert, wenn die Cloud weg ist? Der ESP32 sollte eine Logik besitzen: "Wenn 60 Sekunden kein Befehl vom Controller kommt -> Fallback auf lokalen Eigenverbrauch-Modus (Prio: Hausversorgung)".
+* **Phasen-Symmetrie:** Falls die EEG dreiphasig bilanziert wird, sollte der Controller (sofern die Hardware es kann) auch Schieflasten ausgleichen können.
 
 ## Technologievorschlag
 
@@ -185,16 +264,17 @@ ESP32 (C++ / MicroPython)
 
 ***Backend***:
 
-Node.js
-MQTT Broker (z. B. Mosquitto)
++ Node.js
++ MQTT Broker (z. B. Mosquitto)
 
 ***Datenbank***:
 
-Mongo
++ InfluxDB (MqTT)
++ Mongo (Restlichen Daten)
 
 **Frontend (optional):**
 
-Dashboard für Mitglieder:
-Verbrauch
-Einspeisung
-Speicherstatus
++ Dashboard für Mitglieder:
++ Verbrauch
++ Einspeisung
++ Speicherstatus
