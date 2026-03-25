@@ -1,17 +1,19 @@
-
 # EEG-Platform - Zielsetzung
+
 Ziel ist die Entwicklung eines intelligenten Energiemanagementsystems, das den innerhalb einer (lokalen) EEG verfügbaren Strom nicht nur verwaltet, sondern aktiv und vorausschauend steuert. Die Steuerung soll weitgehend automatisiert erfolgen. Je höher der Eigenverbrauch innerhalb der EEG ist, desto effizienter arbeitet das Gesamtsystem.
 
 ## Voraussetzungen
+
 Jedes Mitglied der EEG verfügt über folgende technische Ausstattung:
 
 + einen Smart Meter (AMIS-Zähler)
 + einen IR-Lesekopf ([auf Basis eines ESP32 (mitterbaur)](https://www.mitterbaur.at/amis-leser.html)) mit WLAN-Anbindung und Verbindung zu:
-   + dem Internet
-   + dem jeweiligen Wechselrichter
-   + optional über Akkukapazitäten, die (ganz oder teilweise) der EEG zur Verfügung gestellt werden können
+  + dem Internet
+  + dem jeweiligen Wechselrichter
+  + optional über Akkukapazitäten, die (ganz oder teilweise) der EEG zur Verfügung gestellt werden können
 
 ## Systemarchitektur
+
 Im Mittelpunkt steht ein zentraler Software-Controller, in dem sämtliche Verbrauchsdaten (Strombezug) und Einspeisedaten der Mitglieder zusammengeführt werden. Auf dieser Basis erfolgt eine laufende Analyse sowie die automatisierte Steuerung von Erzeugung, Verbrauch und Speicherung.
 
 *Betriebszustände und Logik*
@@ -28,8 +30,8 @@ c) Einspeisung < Bezug (Defizit)
 → Priorität 2: Bezug aus dem öffentlichen Netz über den individuellen Energieliefervertrag des jeweiligen Mitglieds.
 
 ## Besonderheit:
-Mitglieder können physische Akkus haben, die auch für den Betrieb in der EEG vorgesehen sind (oder ein Teil); schwierig sind in diesem Fall die unterschiedlichen Systeme / Wechselrichter, da über diese der AKKUzustand, das Einspeisen und der Bezug zu steuern sind. Als Protokoll bietet sich hier Modbus an, da dies das Protokoll im Energieversorgungsbereich ist. 
 
+Mitglieder können physische Akkus haben, die auch für den Betrieb in der EEG vorgesehen sind (oder ein Teil); schwierig sind in diesem Fall die unterschiedlichen Systeme / Wechselrichter, da über diese der AKKUzustand, das Einspeisen und der Bezug zu steuern sind. Als Protokoll bietet sich hier Modbus an, da dies das Protokoll im Energieversorgungsbereich ist.
 
 # Technisches Architekturkonzept – Intelligentes Energiemanagementsystem für EE
 
@@ -78,8 +80,9 @@ Optimierungs- und Regelalgorithmus
 Verteilungslogik (Fairness / Priorisierung)
 Schnittstelle zu Mitgliedern (API)
 
-Datenflüsse
-2.1 Upstream (vom Mitglied zum Controller)
+## Datenflüsse
+
+### Upstream (vom Mitglied zum Controller)
 
 Jedes Mitglied sendet zyklisch (z. B. alle 5–10 Sekunden):
 
@@ -89,14 +92,17 @@ Batteriestatus:
 Ladezustand (%)
 verfügbare Kapazität (kWh)
 Lade-/Entladeleistung
-2.2 Downstream (Controller → Mitglied)
+
+### Downstream (Controller → Mitglied)
 
 Der Controller sendet Steuerbefehle:
 
 Batterie laden / entladen (Leistungsvorgabe)
 ggf. Steuerung von Verbrauchern (zukünftig, z. B. Wärmepumpen)
-3. Regelalgorithmus (Kernlogik)
-3.1 Eingangswerte
+
+### Regelalgorithmus (Kernlogik)
+
+#### Eingangswerte
 
 Global:
 
@@ -114,7 +120,7 @@ Fall A: Balance (± Toleranzbereich)
 → Keine Aktion erforderlich
 Fall B: Überschuss (Einspeisung > Verbrauch)
 
-Berechne:
+#### Berechne:
 
 Überschuss = Einspeisung - Verbrauch
 Verteile auf Speicher:
@@ -145,60 +151,50 @@ Verbrauchsmuster (Machine Learning)
 
 vorausschauendes Laden/Entladen
 Vermeidung unnötiger Netzbezüge
-4.2 Dynamische Optimierung
 
-Zielgrößen:
+## Dynamische Optimierung
+
+**Zielgrößen**:
 
 Maximierung Eigenverbrauch
 Minimierung Kosten
 Netzstabilität
-4.3 Fairness-Mechanismus
+
+####Fairness-Mechanismus
 
 Mögliche Modelle:
 
 proportional zur eingebrachten Energie
 Bonus für bereitgestellte Speicher
 zeitbasierte Rotation
-5. Sicherheits- und Betriebsaspekte
+
+## Sicherheits- und Betriebsaspekte
+
+
 Verschlüsselte Kommunikation (TLS)
 Authentifizierung der Geräte
 Ausfallsicherheit:
-lokaler Fallback (z. B. „keep last state“)
 Logging & Monitoring
 Datenschutz (DSGVO-konform)
-6. Technologievorschlag
 
-Edge:
+## Technologievorschlag
+
+**Edge**:
 
 ESP32 (C++ / MicroPython)
 
-Backend:
+***Backend***:
 
-Node.js / Python (z. B. FastAPI)
+Node.js
 MQTT Broker (z. B. Mosquitto)
-Datenbank:
-InfluxDB (Zeitreihen)
-PostgreSQL (Stammdaten)
 
-Frontend (optional):
+***Datenbank***:
+
+Mongo
+
+**Frontend (optional):**
 
 Dashboard für Mitglieder:
 Verbrauch
 Einspeisung
 Speicherstatus
-7. Nächste sinnvolle Schritte
-Definition der Schnittstellen (API / MQTT Topics)
-Prototyp mit 2–3 Teilnehmern
-Implementierung der Basisregelung (ohne Prognose)
-Integration von Batteriespeichern
-Erweiterung um Prognosemodelle
-
-Wenn du möchtest, kann ich als nächsten Schritt:
-
-dir konkrete MQTT-Topic-Strukturen definieren
-oder den Regelalgorithmus als echten Code (Python/Node.js) schreiben
-oder ein Systemdiagramm (visuell) erstellen
-
-Was brauchst du als nächstes?
-
-Get smarter responses, upload files and images, and more.
