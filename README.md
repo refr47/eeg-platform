@@ -6,12 +6,12 @@ Ziel ist die Entwicklung eines intelligenten Energiemanagementsystems, das den i
 Jedes Mitglied der EEG verfügt über folgende technische Ausstattung:
 
 + einen Smart Meter (AMIS-Zähler)
-+ einen IR-Lesekopf (z. B. auf Basis eines ESP32) mit WLAN-Anbindung und Verbindung zu:
++ einen IR-Lesekopf ([auf Basis eines ESP32 (mitterbaur)](https://www.mitterbaur.at/amis-leser.html)) mit WLAN-Anbindung und Verbindung zu:
    + dem Internet
    + dem jeweiligen Wechselrichter
    + optional über Akkukapazitäten, die (ganz oder teilweise) der EEG zur Verfügung gestellt werden können
 
-Systemarchitektur
+## Systemarchitektur
 Im Mittelpunkt steht ein zentraler Software-Controller, in dem sämtliche Verbrauchsdaten (Strombezug) und Einspeisedaten der Mitglieder zusammengeführt werden. Auf dieser Basis erfolgt eine laufende Analyse sowie die automatisierte Steuerung von Erzeugung, Verbrauch und Speicherung.
 
 Betriebszustände und Logik
@@ -27,21 +27,17 @@ c) Einspeisung < Bezug (Defizit)
 → Priorität 1: Nutzung der innerhalb der EEG verfügbaren Akkureserven (inkl. dynamischer, fairer Verteilung).
 → Priorität 2: Bezug aus dem öffentlichen Netz über den individuellen Energieliefervertrag des jeweiligen Mitglieds.
 
-Datenbasis
-Alle Mitglieder der EEG verfügen über digitale Stromzähler (AMIS-Reader), die als zentrale Datengrundlage für das Energiemanagementsystem dienen.
+## Besonderheit:
+Mitglieder können physische Akkus haben, die auch für den Betrieb in der EEG vorgesehen sind (oder ein Teil); schwierig sind in diesem Fall die unterschiedlichen Systeme / Wechselrichter, da über diese der AKKUzustand, das Einspeisen und der Bezug zu steuern sind. Als Protokoll bietet sich hier Modbus an, da dies das Protokoll im Energieversorgungsbereich ist. 
 
-Wenn du willst, kann ich das als technisches Architekturkonzept (mit Datenflüssen, APIs, Regelalgorithmen) oder als Projektantrag/Fördertext weiter ausarbeiten.
 
-ja
+# Technisches Architekturkonzept – Intelligentes Energiemanagementsystem für EE
 
-Super — ich baue dir das jetzt als technisches Architekturkonzept mit Datenflüssen, Komponenten und Regelalgorithmus aus.
-
-Technisches Architekturkonzept – Intelligentes Energiemanagementsystem für EEG
-1. Gesamtarchitektur
+## Gesamtarchitektur
 
 Das System besteht aus drei zentralen Ebenen:
 
-1.1 Edge-Ebene (bei den Mitgliedern)
+### Edge-Ebene (bei den Mitgliedern)
 
 Komponenten vor Ort:
 
@@ -50,7 +46,7 @@ IR-Lesekopf (ESP32)
 Wechselrichter-Anbindung
 Optional: Batteriespeicher (inkl. Steuerung)
 
-Funktion:
+* * Funktion:
 
 Echtzeit-Erfassung von:
 Strombezug
@@ -65,9 +61,10 @@ geringe Latenz
 hohe Ausfallsicherheit
 sichere Kommunikation (TLS)
 Optional: lokaler Fallback-Modus bei Internet-Ausfall
-1.3 Zentrale Steuerung (SW-Controller)
 
-Zentrale Instanz (Cloud oder lokaler Server):
+### Zentrale Steuerung (SW-Controller)
+
+ Zentrale Instanz (Cloud/VServer):
 
 Module:
 
@@ -77,6 +74,7 @@ Prognosemodul (optional, z. B. PV-Ertrag / Last)
 Optimierungs- und Regelalgorithmus
 Verteilungslogik (Fairness / Priorisierung)
 Schnittstelle zu Mitgliedern (API)
+
 2. Datenflüsse
 2.1 Upstream (vom Mitglied zum Controller)
 
