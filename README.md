@@ -110,7 +110,7 @@ Aktive Vorgabe durch den Optimierungs-Algorithmus.
 
 ## Problematisches
 
-* Scieflast ([[here](./README_2.md)](docs/schieflast.md)
+* Scieflast [Schieflast](doc/schieflast.d)
 
 ---
 
