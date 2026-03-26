@@ -1,9 +1,16 @@
 
 ## 🎯 Zielsetzung
 
-Entwicklung eines vorausschauenden Steuerungssystems für Lokale Energiegemeinschaften (EEG). Das System optimiert den Eigenverbrauch innerhalb der Gemeinschaft durch automatisierte Analyse und aktive Steuerung von Erzeugung, Verbrauch und Speicherung. **Effizienzsteigerung durch maximale interne Nutzung von lokal erzeugtem Strom ist die Kernmetrik.**
+Entwicklung eines vorausschauenden Steuerungssystems für Lokale Energiegemeinschaften (EEG). Das System optimiert den Eigenverbrauch innerhalb der Gemeinschaft durch automatisierte Analyse und aktive Steuerung von Erzeugung, Verbrauch und Speicherung. ***E****ffizienzsteigerung* durch maximale interne Nutzung von lokal erzeugtem Strom soll dadurch erreicht werden, da dadurch die EEG vom reinen Verwalter zu einem aktiven Partner wird.
+
+**Akku-Lösungen**
+
+In der jüngsten Vergangenheit sind eine Vielzahl von Akku-Lösungen (voll ausgestattete Outdoor-Container mit Kühlung) auf den Markt gekommen, die  im Preissegment ab ca. € 40.000,-- zu finden sind. Dies betrifft aber nur die HWare und keine - für einen effizienten Einsatz notwendigen - Controller, der das Management des Akkus übernimmt. Neben dem Problem der Finanzierung muss es auch gewartet werden.
+
+Durch die Förderungen betreiben jedoch viele einen "kleinen" Akku im eigenen Haus. Diese könnten ebenfalls von der EEG herangezogen werden, wobei es dann einen SW-Controller bedarf, der Einspeicherung und Entnahme regelt. 
 
 ---
+
 
 ## 🏗 Systemarchitektur
 
